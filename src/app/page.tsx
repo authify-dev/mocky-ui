@@ -41,8 +41,6 @@ const methodColors: Record<string, string> = {
   DELETE: "bg-red-500/20 text-red-400 border-red-500/30",
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"
-
 export default function Dashboard() {
   const router = useRouter()
 
@@ -59,8 +57,7 @@ export default function Dashboard() {
       setLoading(true)
       setError(null)
       try {
-        console.log("API_BASE", API_BASE)
-        const res = await fetch(`${API_BASE}/v1/prototypes`, { cache: "no-store" })
+        const res = await fetch("/api/proxy/mocky/v1/prototypes", { cache: "no-store" })
         if (!res.ok) {
           const txt = await res.text().catch(() => "")
           throw new Error(`HTTP ${res.status} ${txt}`)

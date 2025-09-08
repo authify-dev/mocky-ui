@@ -63,8 +63,6 @@ type FormData = {
   responseBody: string
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"
-
 function objToKV(obj?: Record<string, string> | null): KV[] {
   if (!obj) return []
   return Object.entries(obj).map(([key, value]) => ({ key, value }))
@@ -107,7 +105,7 @@ export default function EditPrototype() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(`${API_BASE}/v1/prototypes/${params.id}`, { cache: "no-store" })
+        const res = await fetch(`/api/proxy/mocky/v1/prototypes/${params.id}`, { cache: "no-store" })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json: ProtoAPI = await res.json()
         const p = json.data
@@ -188,7 +186,7 @@ export default function EditPrototype() {
     setSaveError(null)
     setSaving(true)
     try {
-      const res = await fetch(`${API_BASE}/v1/prototypes`, {
+      const res = await fetch(`/api/proxy/mocky/v1/prototypes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildPayload),

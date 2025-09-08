@@ -142,8 +142,7 @@ export default function NewPrototype() {
     try {
       const payload = buildPayload()
 
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"
-      const res = await fetch(`${API_BASE}/v1/prototypes`, {
+      const res = await fetch(`/api/proxy/mocky/v1/prototypes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

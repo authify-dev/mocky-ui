@@ -48,8 +48,6 @@ const methodColors: Record<string, string> = {
   DELETE: "bg-red-500/20 text-red-400 border-red-500/30",
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"
-
 export default function PrototypeDetail() {
   const params = useParams<{ id: string }>()
   const id = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : ""
@@ -65,7 +63,7 @@ export default function PrototypeDetail() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(`${API_BASE}/v1/prototypes/${encodeURIComponent(id)}`, { cache: "no-store" })
+        const res = await fetch(`/api/proxy/mocky/v1/prototypes/${encodeURIComponent(id)}`, { cache: "no-store" })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json: ProtoResponse = await res.json()
         if (active) setProto(json.data)
