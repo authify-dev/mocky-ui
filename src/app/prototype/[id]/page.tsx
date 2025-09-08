@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Edit, Play, Copy, Check } from "lucide-react"
+import { Input } from "@/components/ui/input"
 
 type ProtoResponse = {
   data: {
@@ -80,7 +81,8 @@ export default function PrototypeDetail() {
   const mockUrl = useMemo(() => {
     if (!proto) return ""
     // Ruta real del servidor de mocky
-    return `/v1/mocky${proto.request.urlPath}`
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8010"
+    return `${API_BASE}/v1/mocky${proto.request.urlPath}`
   }, [proto])
 
   const copyToClipboard = (text: string) => {
@@ -204,28 +206,43 @@ export default function PrototypeDetail() {
               <CardTitle>Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Endpoint URL</label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-sm bg-muted px-3 py-2 rounded flex-1 font-mono">{mockUrl}</code>
-                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(mockUrl)}>
+                    <Input
+                      readOnly
+                      value={mockUrl}
+                      onFocus={(e) => e.currentTarget.select()}
+                      className="font-mono text-sm"
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="shrink-0"
+                      onClick={() => copyToClipboard(mockUrl)}
+                    >
                       {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                     </Button>
                   </div>
+
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Created</label>
-                  <p className="text-sm mt-1">{new Date(createdAt).toLocaleString()}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
-                  <p className="text-sm mt-1">{new Date(updatedAt).toLocaleString()}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Status</label>
-                  <div className="mt-1">
-                    <Badge variant="default">published</Badge>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                  <div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Created</label>
+                      <p className="text-sm mt-1">{new Date(createdAt).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
+                      <p className="text-sm mt-1">{new Date(updatedAt).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Status</label>
+                    <div className="mt-1">
+                      <Badge variant="default">published</Badge>
+                    </div>
                   </div>
                 </div>
               </div>
