@@ -25,6 +25,7 @@ export default function ChatWidget() {
     try {
 
       const API_BASE = process.env.NEXT_PUBLIC_CHAT_API_BASE_URL ?? "http://localhost:8011"
+      console.log("API_BASE", API_BASE)
       const res = await fetch(`${API_BASE}/message/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

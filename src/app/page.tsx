@@ -59,6 +59,7 @@ export default function Dashboard() {
       setLoading(true)
       setError(null)
       try {
+        console.log("API_BASE", API_BASE)
         const res = await fetch(`${API_BASE}/v1/prototypes`, { cache: "no-store" })
         if (!res.ok) {
           const txt = await res.text().catch(() => "")
