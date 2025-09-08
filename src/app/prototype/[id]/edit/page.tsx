@@ -107,7 +107,6 @@ export default function EditPrototype() {
       setLoading(true)
       setError(null)
       try {
-        // OJO: aquí uso el singular si tu BE así lo expone; si no, deja /v1/prototypes/{id}
         const res = await fetch(`${API_BASE}/v1/prototypes/${params.id}`, { cache: "no-store" })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json: ProtoAPI = await res.json()
@@ -120,12 +119,7 @@ export default function EditPrototype() {
           urlPath: p.request.urlPath || "",
           headers: objToKV(p.request.headers),
           pathParams: objToKV(p.request.path_params),
-          bodySchema: JSON.stringify(
-            p.request.bodySchema ,
-            null,
-            2
-          ),
-          // En GET viene dentro de response.body; guardamos el valor para el editor:
+          bodySchema: JSON.stringify(p.request.bodySchema, null, 2),
           responseStatus: p.response.body.status_code ?? 200,
           responseHeaders: [],
           responseBody: JSON.stringify(p.response.body, null, 2),
@@ -139,11 +133,21 @@ export default function EditPrototype() {
       }
     }
     load()
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [params?.id])
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  // Helpers para vaciar headers
+  const clearRequestHeaders = () => handleInputChange("headers", [])
+  const clearResponseHeaders = () => handleInputChange("responseHeaders", [])
+  const clearAllHeaders = () => {
+    handleInputChange("headers", [])
+    handleInputChange("responseHeaders", [])
   }
 
   // Construir payload con el formato que espera /v1/prototypes (status_code va *dentro* de response.body)
@@ -151,23 +155,27 @@ export default function EditPrototype() {
     try {
       const bodySchemaParsed = JSON.parse(formData.bodySchema || "{}")
       const responseBodyParsed: any = JSON.parse(formData.responseBody || "{}")
-      // si el body no trae status_code, lo inyectamos desde el selector:
+
       if (responseBodyParsed && typeof responseBodyParsed === "object" && responseBodyParsed.status_code == null) {
         responseBodyParsed.status_code = formData.responseStatus
       }
+
+      const headersObj = kvToObj(formData.headers)
+      const pathParamsObj = kvToObj(formData.pathParams)
+
       return {
-        // incluye id si estás editando:
         ...(formData.id ? { id: formData.id } : {}),
         name: formData.name,
         request: {
           method: formData.method,
           urlPath: formData.urlPath,
-          headers: kvToObj(formData.headers),
-          path_params: kvToObj(formData.pathParams),
           bodySchema: bodySchemaParsed,
+          ...(Object.keys(headersObj).length ? { headers: headersObj } : {}),
+          ...(Object.keys(pathParamsObj).length ? { path_params: pathParamsObj } : {}),
         },
         response: {
           body: responseBodyParsed,
+          // si luego soportas headers de respuesta, aplica el mismo patrón condicional aquí
         },
       }
     } catch {
@@ -189,12 +197,8 @@ export default function EditPrototype() {
         const txt = await res.text().catch(() => "")
         throw new Error(`HTTP ${res.status} ${txt}`)
       }
-      // Si tu servicio regresa el recurso actualizado/creado:
       const json = await res.json().catch(() => null as any)
-      const newId =
-        json?.data?.id ||
-        json?.id ||
-        formData.id // fallback por si no regresa data
+      const newId = json?.data?.id || json?.id || formData.id
       if (newId) {
         router.push(`/prototype/${encodeURIComponent(newId)}`)
       }
@@ -222,9 +226,7 @@ export default function EditPrototype() {
           </div>
         </header>
         <main className="container mx-auto px-6 py-8">
-          <div className="rounded-md border border-border p-6 text-sm text-muted-foreground">
-            Fetching data…
-          </div>
+          <div className="rounded-md border border-border p-6 text-sm text-muted-foreground">Fetching data…</div>
         </main>
       </div>
     )
@@ -247,9 +249,7 @@ export default function EditPrototype() {
           </div>
         </header>
         <main className="container mx-auto px-6 py-8">
-          <div className="rounded-md border border-destructive/40 p-6 text-sm text-destructive">
-            {error}
-          </div>
+          <div className="rounded-md border border-destructive/40 p-6 text-sm text-destructive">{error}</div>
         </main>
       </div>
     )
@@ -274,6 +274,9 @@ export default function EditPrototype() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              <Button variant="outline" size="sm" onClick={clearAllHeaders}>
+                Borrar todos los Headers
+              </Button>
               <Link href={`/prototype/${params.id}`}>
                 <Button variant="outline" size="sm">
                   <Eye className="h-4 w-4 mr-2" />
@@ -293,9 +296,7 @@ export default function EditPrototype() {
       <main className="container mx-auto px-6 py-8">
         <div className="max-w-6xl mx-auto space-y-6">
           {saveError && (
-            <div className="rounded-md border border-destructive/40 p-4 text-sm text-destructive">
-              {saveError}
-            </div>
+            <div className="rounded-md border border-destructive/40 p-4 text-sm text-destructive">{saveError}</div>
           )}
 
           {/* Basic Info */}
@@ -307,11 +308,7 @@ export default function EditPrototype() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Prototype Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                  />
+                  <Input id="name" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="method">HTTP Method</Label>
@@ -353,7 +350,7 @@ export default function EditPrototype() {
             <TabsContent value="request" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-lg">Request Headers</CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -362,6 +359,7 @@ export default function EditPrototype() {
                       onChange={(headers) => handleInputChange("headers", headers)}
                       keyPlaceholder="Header name"
                       valuePlaceholder="Header value"
+                      allowDeleteLast={true}
                     />
                   </CardContent>
                 </Card>
@@ -376,6 +374,7 @@ export default function EditPrototype() {
                       onChange={(pathParams) => handleInputChange("pathParams", pathParams)}
                       keyPlaceholder="Parameter name"
                       valuePlaceholder="Default value"
+                      allowDeleteLast={true}
                     />
                   </CardContent>
                 </Card>
@@ -423,8 +422,16 @@ export default function EditPrototype() {
                 </Card>
 
                 <Card className="lg:col-span-2">
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-lg">Response Headers</CardTitle>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive border-destructive"
+                      onClick={clearResponseHeaders}
+                    >
+                      Vaciar
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     <KeyValueEditor

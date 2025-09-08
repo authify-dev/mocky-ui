@@ -47,7 +47,7 @@ export default function NewPrototype() {
     method: "GET",
     urlPath: "/v1/health",
     delay: 200, // ms
-    headers: [{ key: "Content-Type", value: "application/json" }] as KVItem[],
+    headers: [] as KVItem[],
     queryParams: [{ key: "", value: "", regex: "" }] as QueryItem[],
     // Un bodySchema de ejemplo válido para signin por email:
     bodySchema: JSON.stringify(
@@ -141,7 +141,9 @@ export default function NewPrototype() {
     setSaving(true)
     try {
       const payload = buildPayload()
-      const res = await fetch("http://localhost:8000/v1/prototypes", {
+
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"
+      const res = await fetch(`${API_BASE}/v1/prototypes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
